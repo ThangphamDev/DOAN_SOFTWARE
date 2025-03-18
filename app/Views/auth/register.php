@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - Quán Coffee T&2K</title>
+    <link rel="stylesheet" href="asset/css/styles.css">
+    <link rel="stylesheet" href="asset/css/auth-styles.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body> 
+    <main>
+        <section class="auth-container fade-in">
+            <h2>Đăng Ký</h2>
+            <form id="register-form">
+                <label for="phone">Số điện thoại:</label>
+                <input type="text" id="phone" name="phone" required>
+                
+                <label for="password">Mật khẩu:</label>
+                <input type="password" id="password" name="password" required>
+                
+                <label for="confirm-password">Nhập lại mật khẩu:</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+                
+                <div class="g-recaptcha" data-sitekey="your-site-key"></div>
+                
+                <button type="submit" class="btn-primary">Đăng Ký</button>
+                <p>Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
