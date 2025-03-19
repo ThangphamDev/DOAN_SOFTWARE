@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-require_once __DIR__.'/vendor/autoload.php';
-
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
@@ -13,6 +11,24 @@ switch ($path) {
         
     case '/menu':
         require __DIR__.'/app/Views/menu/menu.php';
+        break;
+        
+    case '/cart/add':
+        require __DIR__.'/app/Controllers/CartController.php';
+        $cartController = new CartController();
+        $cartController->addToCart();
+        break;
+        
+    case '/cart/update':
+        require __DIR__.'/app/Controllers/CartController.php';
+        $cartController = new CartController();
+        $cartController->updateQuantity();
+        break;
+        
+    case '/cart/remove':
+        require __DIR__.'/app/Controllers/CartController.php';
+        $cartController = new CartController();
+        $cartController->removeFromCart();
         break;
         
     case '/products':
@@ -29,6 +45,14 @@ switch ($path) {
         
     case '/checkout':
         require __DIR__.'/app/Views/checkout/checkout.php';
+        break;
+        
+    case '/checkout/success':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require __DIR__.'/app/Views/checkout/success.php';
+        } else {
+            header('Location: /checkout');
+        }
         break;
         
     case '/orders':

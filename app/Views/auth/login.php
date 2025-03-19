@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập - Quán Coffee T&2K</title>
-    <link rel="stylesheet" href="asset/css/styles.css">
-    <link rel="stylesheet" href="asset/css/auth-styles.css">
+    <link rel="stylesheet" href="/public/css/auth-style.css">
+    <link rel="stylesheet" href="/public/css/home.css">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="script.js" defer></script>
-    <?php include 'App/Views/Shares/header.php'; ?>
+    <?php include 'App/Views/shares/header.php'; ?>
 </head>
 <body>
 
@@ -32,4 +32,4 @@
 </body>
 </html>
 
-<?php include 'App/Views/Shares/footer.php'; ?>
+<?php include 'App/Views/shares/footer.php'; ?>

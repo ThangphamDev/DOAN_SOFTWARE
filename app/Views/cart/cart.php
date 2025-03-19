@@ -1,150 +1,239 @@
+<?php
+require_once __DIR__.'/../../Config/Database.php';
+require_once __DIR__.'/../../Models/Menu.php';
 
-<?php include 'App/Views/Shares/header.php'; ?>
-<div class="cart-container">
-    <h2>Giỏ Hàng</h2>
-    <div class="cart-items">
-        <?php if (empty($cartItems)): ?>
-            <p class="empty-cart">Giỏ hàng trống</p>
-        <?php else: ?>
-            <?php foreach ($cartItems as $item): ?>
-                <div class="cart-item">
-                    <img src="<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>">
-                    <div class="item-details">
-                        <h3><?php echo $item['name']; ?></h3>
-                        <p class="price"><?php echo number_format($item['price'], 0, ',', '.'); ?>đ</p>
-                        <div class="quantity-controls">
-                            <button class="qty-btn" onclick="updateQuantity(<?php echo $item['id']; ?>, 'decrease')">-</button>
-                            <input type="number" value="<?php echo $item['quantity']; ?>" min="1" 
-                                   onchange="updateQuantity(<?php echo $item['id']; ?>, 'set', this.value)">
-                            <button class="qty-btn" onclick="updateQuantity(<?php echo $item['id']; ?>, 'increase')">+</button>
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    $menu = new Menu($db);
+} catch (Exception $e) {
+    error_log("Database Error: " . $e->getMessage());
+}
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - Quán Cafe</title>
+    <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="stylesheet" href="/public/css/cart.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <?php include __DIR__.'/../shares/header.php'; ?>
+</head>
+<body>
+    <div class="container">
+        <h1>Giỏ Hàng</h1>
+        
+        <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
+            <div class="cart-container">
+                <div class="cart-items">
+                    <?php 
+                    $total = 0;
+                    foreach ($_SESSION['cart'] as $productId => $item): 
+                        // Lấy thông tin sản phẩm từ database
+                        $product = $menu->getItemById($productId);
+                        if ($product):
+                            $subtotal = $product['price'] * $item['quantity'];
+                            $total += $subtotal;
+                    ?>
+                        <div class="cart-item" data-product-id="<?php echo $productId; ?>">
+                            <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                            <div class="item-details">
+                                <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                                <p class="price"><?php echo number_format($product['price'], 0, ',', '.'); ?> đ</p>
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity"><?php echo $item['quantity']; ?></span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <p class="subtotal">Tổng: <?php echo number_format($subtotal, 0, ',', '.'); ?> đ</p>
+                            </div>
+                            <button class="remove-item">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    ?>
+                </div>
+
+                <div class="cart-summary">
+                    <h2>Tổng Đơn Hàng</h2>
+                    <div class="summary-item">
+                        <span>Tạm tính:</span>
+                        <span><?php echo number_format($total, 0, ',', '.'); ?> đ</span>
                     </div>
-                    <button class="remove-btn" onclick="removeItem(<?php echo $item['id']; ?>)">×</button>
+                    <div class="summary-item">
+                        <span>Phí vận chuyển:</span>
+                        <span>Miễn phí</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Tổng cộng:</span>
+                        <span><?php echo number_format($total, 0, ',', '.'); ?> đ</span>
+                    </div>
+                    <a href="/checkout" class="checkout-btn">Tiến hành đặt hàng</a>
                 </div>
-            <?php endforeach; ?>
-            
-            <div class="cart-summary">
-                <div class="total">
-                    <span>Tổng cộng:</span>
-                    <span class="total-amount"><?php echo number_format($total, 0, ',', '.'); ?>đ</span>
-                </div>
-                <a href="/checkout" class="checkout-btn">Thanh Toán</a>
+            </div>
+        <?php else: ?>
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <p>Giỏ hàng của bạn đang trống</p>
+                <a href="/menu" class="continue-shopping">Tiếp tục mua sắm</a>
             </div>
         <?php endif; ?>
     </div>
-</div>
 
-<style>
-.cart-container {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners for quantity buttons
+            const quantityBtns = document.querySelectorAll('.quantity-btn');
+            quantityBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.cart-item');
+                    const productId = item.dataset.productId;
+                    const isPlus = this.classList.contains('plus');
+                    updateQuantity(productId, isPlus ? 1 : -1);
+                });
+            });
 
-.cart-items {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+            // Add event listeners for remove buttons
+            const removeBtns = document.querySelectorAll('.remove-item');
+            removeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.cart-item');
+                    const productId = item.dataset.productId;
+                    removeFromCart(productId);
+                });
+            });
+        });
 
-.cart-item {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+        function updateQuantity(productId, change) {
+            const item = document.querySelector(`[data-product-id="${productId}"]`);
+            const quantityElement = item.querySelector('.quantity');
+            const priceElement = item.querySelector('.price');
+            const subtotalElement = item.querySelector('.subtotal');
+            
+            let currentQuantity = parseInt(quantityElement.textContent);
+            let newQuantity = currentQuantity + change;
+            
+            if (newQuantity < 1) {
+                removeFromCart(productId);
+            } else {
+                fetch('/cart/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: newQuantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update quantity display
+                        quantityElement.textContent = newQuantity;
+                        
+                        // Update subtotal for this item
+                        const price = parseInt(priceElement.textContent.replace(/[^0-9]/g, ''));
+                        const subtotal = price * newQuantity;
+                        subtotalElement.textContent = 'Tổng: ' + formatCurrency(subtotal);
+                        
+                        // Update cart summary
+                        updateCartSummary();
+                        
+                        // Update cart count in header if exists
+                        const cartCountElement = document.querySelector('.cart-count');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = data.cart_count;
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi cập nhật số lượng');
+                });
+            }
+        }
 
-.cart-item img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 4px;
-}
+        function removeFromCart(productId) {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                fetch('/cart/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the item from DOM
+                        const itemElement = document.querySelector(`[data-product-id="${productId}"]`);
+                        itemElement.remove();
+                        
+                        // Update cart count in header
+                        const cartCountElement = document.querySelector('.cart-count');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = data.cart_count;
+                        }
+                        
+                        // Update cart summary
+                        updateCartSummary();
+                        
+                        // Show success message
+                        alert('Đã xóa sản phẩm khỏi giỏ hàng');
+                        
+                        // If cart is empty, reload page
+                        if (data.cart_count === 0) {
+                            location.reload();
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi xóa sản phẩm');
+                });
+            }
+        }
 
-.item-details {
-    flex: 1;
-    margin-left: 15px;
-}
+        function updateCartSummary() {
+            // Calculate new totals
+            let subtotal = 0;
+            const items = document.querySelectorAll('.cart-item');
+            
+            items.forEach(item => {
+                const price = parseInt(item.querySelector('.price').textContent.replace(/[^0-9]/g, ''));
+                const quantity = parseInt(item.querySelector('.quantity').textContent);
+                subtotal += price * quantity;
+            });
+            
+            // Update summary display
+            const subtotalElement = document.querySelector('.summary-item:first-child span:last-child');
+            const totalElement = document.querySelector('.summary-item.total span:last-child');
+            
+            if (subtotalElement) subtotalElement.textContent = formatCurrency(subtotal);
+            if (totalElement) totalElement.textContent = formatCurrency(subtotal);
+        }
 
-.price {
-    color: #e44d26;
-    font-weight: bold;
-    font-size: 1.1em;
-}
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+    </script>
 
-.quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.qty-btn {
-    width: 30px;
-    height: 30px;
-    border: none;
-    background: #f0f0f0;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.remove-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #999;
-    cursor: pointer;
-}
-
-.cart-summary {
-    margin-top: 20px;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.total {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-
-.checkout-btn {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    background: #4CAF50;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 4px;
-}
-
-.checkout-btn:hover {
-    background: #45a049;
-}
-
-.empty-cart {
-    text-align: center;
-    padding: 40px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-</style>
-
-<script>
-function updateQuantity(itemId, action, value = null) {
-    // Implement quantity update logic
-}
-
-function removeItem(itemId) {
-    // Implement remove item logic
-}
-</script>
-
-<?php include './App/Views/Shares/footer.php'; ?>
+    <?php include __DIR__.'/../shares/footer.php'; ?>
+</body>
+</html>

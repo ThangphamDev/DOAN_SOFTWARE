@@ -30,4 +30,21 @@ class Menu {
         $stmt->execute();
         return $stmt;
     }
+
+    public function getItemById($id) {
+        try {
+            $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":id", $id);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() > 0) {
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error in getItemById: " . $e->getMessage());
+            return false;
+        }
+    }
 } 

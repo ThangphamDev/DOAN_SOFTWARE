@@ -1,4 +1,40 @@
-<?php include './app/Views/shares/header.php'; ?>
+<?php
+require_once __DIR__ . '/../../config/Database.php';
+require_once __DIR__ . '/../../Models/Menu.php';
+
+// Khởi tạo session nếu chưa có
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Khởi tạo kết nối database
+$db = new Database();
+$conn = $db->getConnection();
+
+// Khởi tạo model Menu
+$menu = new Menu($conn);
+
+// Lấy thông tin giỏ hàng từ session
+$cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+$total = 0;
+
+// Chuyển đổi dữ liệu giỏ hàng để hiển thị
+$display_items = [];
+foreach ($cart_items as $product_id => $item) {
+    $product = $menu->getItemById($product_id);
+    if ($product) {
+        $display_items[] = [
+            'name' => $product['name'],
+            'price' => $product['price'],
+            'quantity' => $item['quantity'],
+            'image' => $product['image']
+        ];
+        $total += $product['price'] * $item['quantity'];
+    }
+}
+?>
+
+<?php include __DIR__ . '/../shares/header.php'; ?>
 
 <div class="checkout-container">
     <h2>Thanh Toán</h2>
@@ -7,11 +43,16 @@
         <div class="order-summary">
             <h3>Đơn hàng của bạn</h3>
             <div class="order-items">
-                <?php if (!empty($cartItems)): ?>
-                    <?php foreach ($cartItems as $item): ?>
+                <?php if (!empty($display_items)): ?>
+                    <?php foreach ($display_items as $item): ?>
                         <div class="order-item">
-                            <span class="item-name"><?php echo $item['name']; ?></span>
-                            <span class="item-quantity">x<?php echo $item['quantity']; ?></span>
+                            <div class="item-info">
+                                <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="item-image">
+                                <div class="item-details">
+                                    <span class="item-name"><?php echo htmlspecialchars($item['name']); ?></span>
+                                    <span class="item-quantity">x<?php echo $item['quantity']; ?></span>
+                                </div>
+                            </div>
                             <span class="item-price"><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?>đ</span>
                         </div>
                     <?php endforeach; ?>
@@ -22,11 +63,12 @@
                     </div>
                 <?php else: ?>
                     <p class="empty-cart">Không có sản phẩm nào để thanh toán</p>
+                    <a href="/menu" class="continue-shopping">Tiếp tục mua sắm</a>
                 <?php endif; ?>
             </div>
         </div>
 
-        <form class="checkout-form" action="/process-checkout" method="POST">
+        <form class="checkout-form" action="/checkout/success" method="POST">
             <h3>Thông tin thanh toán</h3>
             
             <div class="form-group">
@@ -90,8 +132,41 @@
 .order-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid #eee;
+}
+
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-name {
+    font-weight: 500;
+}
+
+.item-quantity {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.item-price {
+    font-weight: 500;
+    color: #4CAF50;
 }
 
 .order-total {
@@ -147,6 +222,27 @@
 }
 
 .place-order-btn:hover {
+    background: #45a049;
+}
+
+.empty-cart {
+    text-align: center;
+    color: #666;
+    margin: 20px 0;
+}
+
+.continue-shopping {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.continue-shopping:hover {
     background: #45a049;
 }
 
