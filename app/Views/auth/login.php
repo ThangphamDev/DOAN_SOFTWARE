@@ -7,29 +7,38 @@
     <link rel="stylesheet" href="/public/css/auth-style.css">
     <link rel="stylesheet" href="/public/css/home.css">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <script src="script.js" defer></script>
-    <?php include 'App/Views/shares/header.php'; ?>
 </head>
 <body>
-
+    <?php include __DIR__ . '/../shares/header.php'; ?>
     <main>
         <section class="auth-container fade-in">
             <h2>Đăng Nhập</h2>
-            <form id="login-form">
-                <label for="phone">Số điện thoại:</label>
-                <input type="text" id="phone" name="phone" required>
+            <?php if(isset($_SESSION['error'])): ?>
+                <div class="alert alert-danger">
+                    <?php 
+                    echo $_SESSION['error'];
+                    unset($_SESSION['error']);
+                    ?>
+                </div>
+            <?php endif; ?>
+            <form id="login-form" action="/login/process" method="POST">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
                 
-                <label for="password">Mật khẩu:</label>
-                <input type="password" id="password" name="password" required>
+                <div class="form-group">
+                    <label for="password">Mật khẩu:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
                 
                 <div class="g-recaptcha" data-sitekey="your-site-key"></div>
                 
                 <button type="submit" class="btn-primary">Đăng Nhập</button>
-                <p>Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+                <p>Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
             </form>
         </section>
     </main>
+    <?php include __DIR__ . '/../shares/footer.php'; ?>
 </body>
 </html>
-
-<?php include 'App/Views/shares/footer.php'; ?>

@@ -6,10 +6,18 @@ use App\Controllers\ProductController;
 use App\Controllers\CategoryController;
 use App\Controllers\CartController;
 use App\Controllers\OrderController;
+use App\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Auth routes
+Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // User routes
 Route::resource('users', UserController::class);

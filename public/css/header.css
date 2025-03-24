@@ -222,3 +222,19 @@ nav .item a:hover:not(.cart-link) {
         font-size: 12px;
     }
 }
+
+.register-link {
+    color: #fff;
+    margin-left: 5px;
+}
+
+.register-link a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.register-link a:hover {
+    color: #d48141;
+}

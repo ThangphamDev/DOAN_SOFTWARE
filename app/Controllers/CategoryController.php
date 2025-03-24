@@ -1,57 +1,112 @@
 <?php
+require_once __DIR__ . '/../Models/Category.php';
 
-namespace App\Controllers;
+class CategoryController {
+    private $category;
 
-use App\Models\Category;
-use Illuminate\Http\Request;
-
-class CategoryController extends Controller
-{
-    public function index()
-    {
-        $categories = Category::all();
-        return view('categories.index', compact('categories'));
+    public function __construct($db) {
+        $this->category = new Category($db);
     }
 
-    public function create()
-    {
-        return view('categories.create');
+    // Hiển thị danh sách danh mục
+    public function index() {
+        $categories = $this->category->read();
+        require_once __DIR__ . '/../Views/categories/index.php';
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|string'
-        ]);
-
-        Category::create($validated);
-
-        return redirect()->route('categories.index')->with('success', 'Category created successfully');
+    // Hiển thị chi tiết danh mục
+    public function show($id) {
+        $this->category->category_id = $id;
+        if($this->category->readOne()) {
+            require_once __DIR__ . '/../Views/categories/show.php';
+        } else {
+            header("Location: /categories");
+        }
     }
 
-    public function edit(Category $category)
-    {
-        return view('categories.edit', compact('category'));
+    // Hiển thị form tạo danh mục mới
+    public function create() {
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header("Location: /login");
+            exit();
+        }
+
+        require_once __DIR__ . '/../Views/categories/create.php';
     }
 
-    public function update(Request $request, Category $category)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|string'
-        ]);
+    // Xử lý tạo danh mục mới
+    public function store() {
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header("Location: /login");
+            exit();
+        }
 
-        $category->update($validated);
+        if($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->category->name = $_POST['name'];
+            $this->category->description = $_POST['description'];
+            $this->category->image_url = $_POST['image_url'];
+            $this->category->is_active = isset($_POST['is_active']) ? 1 : 0;
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully');
+            if($this->category->create()) {
+                header("Location: /categories");
+            } else {
+                $error = "Không thể tạo danh mục mới.";
+                require_once __DIR__ . '/../Views/categories/create.php';
+            }
+        }
     }
 
-    public function destroy(Category $category)
-    {
-        $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully');
+    // Hiển thị form chỉnh sửa danh mục
+    public function edit($id) {
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header("Location: /login");
+            exit();
+        }
+
+        $this->category->category_id = $id;
+        if($this->category->readOne()) {
+            require_once __DIR__ . '/../Views/categories/edit.php';
+        } else {
+            header("Location: /categories");
+        }
+    }
+
+    // Xử lý cập nhật danh mục
+    public function update($id) {
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header("Location: /login");
+            exit();
+        }
+
+        if($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->category->category_id = $id;
+            $this->category->name = $_POST['name'];
+            $this->category->description = $_POST['description'];
+            $this->category->image_url = $_POST['image_url'];
+            $this->category->is_active = isset($_POST['is_active']) ? 1 : 0;
+
+            if($this->category->update()) {
+                header("Location: /categories");
+            } else {
+                $error = "Không thể cập nhật danh mục.";
+                require_once __DIR__ . '/../Views/categories/edit.php';
+            }
+        }
+    }
+
+    // Xử lý xóa danh mục
+    public function destroy($id) {
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header("Location: /login");
+            exit();
+        }
+
+        $this->category->category_id = $id;
+        if($this->category->delete()) {
+            header("Location: /categories");
+        } else {
+            $error = "Không thể xóa danh mục.";
+            require_once __DIR__ . '/../Views/categories/index.php';
+        }
     }
 } 

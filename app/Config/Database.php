@@ -1,7 +1,7 @@
 <?php
 class Database {
     private $host = "localhost";
-    private $db_name = "restaurant_db";
+    private $db_name = "CAFET2K";
     private $username = "root";
     private $password = "";
     public $conn;
@@ -15,9 +15,10 @@ class Database {
                 $this->username,
                 $this->password
             );
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->conn->exec("set names utf8");
         } catch(PDOException $e) {
-            echo "Lỗi kết nối: " . $e->getMessage();
+            echo "Connection error: " . $e->getMessage();
         }
 
         return $this->conn;
