@@ -21,7 +21,7 @@ class Product {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
                 LEFT JOIN categories c ON p.category_id = c.category_id
-                WHERE p.is_available = 1
+                WHERE p.is_available = 1 AND p.is_deleted = 0
                 ORDER BY p.created_at DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -35,6 +35,7 @@ class Product {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
                 LEFT JOIN categories c ON p.category_id = c.category_id
+                WHERE p.is_deleted = 0
                 ORDER BY p.created_at DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -75,16 +76,14 @@ class Product {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
                 LEFT JOIN categories c ON p.category_id = c.category_id
-                WHERE p.category_id = :category_id AND p.is_available = 1";
+                WHERE p.category_id = :category_id AND p.is_available = 1 AND p.is_deleted = 0";
         
-        // Nếu có excludeId, loại trừ sản phẩm hiện tại
         if ($excludeId) {
             $query .= " AND p.product_id != :exclude_id";
         }
         
         $query .= " ORDER BY RAND()";
         
-        // Nếu có limit, giới hạn số lượng
         if ($limit) {
             $query .= " LIMIT :limit";
         }
@@ -110,7 +109,7 @@ class Product {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
                 LEFT JOIN categories c ON p.category_id = c.category_id
-                WHERE p.is_featured = 1 AND p.is_available = 1
+                WHERE p.is_featured = 1 AND p.is_available = 1 AND p.is_deleted = 0
                 ORDER BY p.created_at DESC
                 LIMIT 0,6";
 
@@ -189,14 +188,27 @@ class Product {
 
     // Xóa sản phẩm
     public function delete() {
-        $query = "DELETE FROM " . $this->table_name . " WHERE product_id = :product_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":product_id", $this->product_id);
+        try {
+            // Bắt đầu transaction
+            $this->conn->beginTransaction();
 
-        if($stmt->execute()) {
+            // 1. Cập nhật trạng thái is_deleted thay vì xóa sản phẩm
+            $stmt = $this->conn->prepare("UPDATE products SET is_deleted = 1 WHERE product_id = ?");
+            $stmt->execute([$this->product_id]);
+
+            // 2. Cập nhật trạng thái is_available = 0 để ẩn sản phẩm
+            $stmt = $this->conn->prepare("UPDATE products SET is_available = 0 WHERE product_id = ?");
+            $stmt->execute([$this->product_id]);
+
+            // Commit transaction
+            $this->conn->commit();
             return true;
+        } catch (PDOException $e) {
+            // Rollback transaction nếu có lỗi
+            $this->conn->rollBack();
+            error_log("Error soft deleting product: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
     
     // Đếm tổng số sản phẩm

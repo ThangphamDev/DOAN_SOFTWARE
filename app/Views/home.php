@@ -1515,7 +1515,7 @@ $product = new Product($db);
             </div>
             <div class="gallery-grid" data-aos="fade-up" data-aos-delay="200">
                 <div class="gallery-item">
-                    <img src="/public/images/home/gallery-1.jpg" alt="Không gian quán">
+                    <img src="/public/images/home/khonggianquan.jpg" alt="Không gian quán">
                     <div class="gallery-overlay">
                         <div class="gallery-icon">
                             <i class="fas fa-plus"></i>
@@ -1523,7 +1523,7 @@ $product = new Product($db);
                     </div>
                 </div>
                 <div class="gallery-item">
-                    <img src="/public/images/home/gallery-2.jpg" alt="Đồ uống">
+                    <img src="/public/images/products/latte Nóng.jpg" alt="Đồ uống">
                     <div class="gallery-overlay">
                         <div class="gallery-icon">
                             <i class="fas fa-plus"></i>
@@ -1531,7 +1531,7 @@ $product = new Product($db);
                     </div>
                 </div>
                 <div class="gallery-item">
-                    <img src="/public/images/home/gallery-3.jpg" alt="Bánh ngọt">
+                    <img src="/public/images/products/banhngot.jpg" alt="Bánh ngọt">
                     <div class="gallery-overlay">
                         <div class="gallery-icon">
                             <i class="fas fa-plus"></i>
@@ -1539,7 +1539,7 @@ $product = new Product($db);
                     </div>
                 </div>
                 <div class="gallery-item">
-                    <img src="/public/images/home/gallery-4.jpg" alt="Pha chế">
+                    <img src="/public/images/products/phache.jpg" alt="Pha chế">
                     <div class="gallery-overlay">
                         <div class="gallery-icon">
                             <i class="fas fa-plus"></i>
