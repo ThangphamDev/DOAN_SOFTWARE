@@ -9,7 +9,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../shares/header.php'; ?>
+    <?php include "app/Views/components/header.php"; ?>
     <main>
         <section class="auth-container fade-in">
             <h2>Đăng Nhập</h2>
@@ -39,6 +39,6 @@
             </form>
         </section>
     </main>
-    <?php include __DIR__ . '/../shares/footer.php'; ?>
+    <?php include "app/Views/components/footer.php"; ?>
 </body>
 </html>

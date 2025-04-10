@@ -269,7 +269,7 @@ foreach($cart as $item) {
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../shares/header.php'; ?>
+    <?php include 'app/Views/components/header.php'; ?>
 
     <div class="checkout-section">
         <div class="container">
@@ -385,7 +385,7 @@ foreach($cart as $item) {
         </div>
     </div>
 
-    <?php include __DIR__ . '/../shares/footer.php'; ?>
+    <?php include 'app/Views/components/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {

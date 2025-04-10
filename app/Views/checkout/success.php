@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 unset($_SESSION['cart']);
 ?>
 
-<?php include __DIR__ . '/../shares/header.php'; ?>
+<?php include 'app/Views/components/header.php'; ?>
 
 <div class="success-container">
     <div class="success-content">
@@ -145,4 +145,4 @@ p {
 }
 </style>
 
-<?php include __DIR__ . '/../shares/footer.php'; ?> 
+<?php include 'app/Views/components/footer.php'; ?> 

@@ -1,4 +1,4 @@
-<?php include __DIR__ . '/../shares/header.php'; ?>
+<?php include 'app/Views/components/header.php'; ?>
 
 <div class="success-section">
     <div class="container">
@@ -143,4 +143,4 @@ h1 {
 unset($_SESSION['success']);
 ?>
 
-<?php include __DIR__ . '/../shares/footer.php'; ?> 
+<?php include 'app/Views/components/footer.php'; ?> 

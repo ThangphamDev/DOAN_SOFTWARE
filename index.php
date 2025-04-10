@@ -9,12 +9,27 @@ $database = new Database();
 $db = $database->getConnection();
 
 // Load models
+require_once __DIR__.'/app/Models/BaseModel.php';
 require_once __DIR__.'/app/Models/Order.php';
 require_once __DIR__.'/app/Models/OrderItem.php';
+require_once __DIR__.'/app/Models/Promotion.php';
 
 // Load controllers
+require_once __DIR__.'/app/Controllers/BaseController.php';
 require_once __DIR__.'/app/Controllers/CartController.php';
-$cartController = new CartController($db);
+require_once __DIR__.'/app/Controllers/ProductController.php';
+require_once __DIR__.'/app/Controllers/AdminController.php';
+require_once __DIR__.'/app/Controllers/ProfileController.php';
+require_once __DIR__.'/app/Controllers/OrderController.php';
+require_once __DIR__.'/app/Controllers/NotificationController.php';
+$cartController = new App\Controllers\CartController($db);
+$adminController = new AdminController($db);
+$profileController = new ProfileController($db);
+$orderController = new OrderController($db);
+$notificationController = new NotificationController($db);
+
+// Load routes configuration
+require_once __DIR__.'/routes/routes.php';
 
 switch ($path) {
     case '/':
@@ -25,8 +40,21 @@ switch ($path) {
         require __DIR__.'/app/Views/menu/menu.php';
         break;
         
+    case (preg_match('/^\/menu\/product\/(\d+)$/', $path, $matches) ? true : false):
+        $productId = $matches[1];
+        $productController = new ProductController($db);
+        $productController->detail($productId);
+        break;
+        
     case '/products':
-        require __DIR__.'/app/Views/product/product.php';
+        header("Location: /menu");
+        exit();
+        break;
+        
+    case (preg_match('/^\/products\/detail\/(\d+)$/', $path, $matches) ? true : false):
+        $productId = $matches[1];
+        header("Location: /menu/product/$productId");
+        exit();
         break;
         
     case '/cart':
@@ -179,12 +207,66 @@ switch ($path) {
         require __DIR__.'/app/Views/orders/orders.php';
         break;
         
+    case (preg_match('/^\/orders\/view\/(\d+)$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+        $orderId = $matches[1];
+        $orderController->viewOrder($orderId);
+        break;
+        
+    case (preg_match('/^\/orders\/cancel\/(\d+)$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+        $orderId = $matches[1];
+        $orderController->cancelOrder($orderId);
+        break;
+        
     case '/profile':
         if (!isset($_SESSION['user_id'])) {
             header('Location: /login');
             exit;
         }
-        require __DIR__.'/app/Views/profile/profile.php';
+        $profileController->index();
+        break;
+        
+    case '/profile/update':
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+        $profileController->update();
+        break;
+        
+    case '/user':
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+        $profileController->index();
+        break;
+        
+    case '/notifications':
+        $notificationController->index();
+        break;
+        
+    case '/notifications/mark-as-read':
+        $notificationController->markAsRead();
+        break;
+        
+    case '/notifications/mark-all-as-read':
+        $notificationController->markAllAsRead();
+        break;
+        
+    case '/notifications/delete':
+        $notificationController->delete();
+        break;
+        
+    case '/notifications/unread-count':
+        $notificationController->getUnreadCount();
         break;
         
     case '/logout':
@@ -193,6 +275,262 @@ switch ($path) {
         exit;
         break;
         
+    // Admin Routes
+    case '/admin':
+        // Check admin authentication
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->dashboard();
+        break;
+        
+    // Admin Products
+    case '/admin/products':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->products();
+        break;
+        
+    case '/admin/products/create':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->createProduct();
+        break;
+        
+    case '/admin/products/store':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->storeProduct();
+        } else {
+            header('Location: /admin/products/create');
+            exit;
+        }
+        break;
+        
+    case (preg_match('/^\/admin\/products\/(\d+)\/edit$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $productId = $matches[1];
+        $adminController->editProduct($productId);
+        break;
+        
+    case (preg_match('/^\/admin\/products\/(\d+)\/update$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $productId = $matches[1];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->updateProduct($productId);
+        } else {
+            header("Location: /admin/products/$productId/edit");
+            exit;
+        }
+        break;
+        
+    case (preg_match('/^\/admin\/products\/(\d+)\/delete$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $productId = $matches[1];
+        $adminController->deleteProduct($productId);
+        break;
+    
+    // Admin Categories
+    case '/admin/categories':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->categories();
+        break;
+        
+    case '/admin/categories/create':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->createCategory();
+        break;
+        
+    case '/admin/categories/store':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->storeCategory();
+        } else {
+            header('Location: /admin/categories/create');
+            exit;
+        }
+        break;
+        
+    case (preg_match('/^\/admin\/categories\/(\d+)\/edit$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $categoryId = $matches[1];
+        $adminController->editCategory($categoryId);
+        break;
+        
+    case (preg_match('/^\/admin\/categories\/(\d+)\/update$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $categoryId = $matches[1];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->updateCategory($categoryId);
+        } else {
+            header("Location: /admin/categories/$categoryId/edit");
+            exit;
+        }
+        break;
+        
+    case (preg_match('/^\/admin\/categories\/(\d+)\/delete$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $categoryId = $matches[1];
+        $adminController->deleteCategory($categoryId);
+        break;
+    
+    // Admin Orders
+    case '/admin/orders':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->orders();
+        break;
+        
+    case (preg_match('/^\/admin\/orders\/(\d+)$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $orderId = $matches[1];
+        $adminController->orderDetail($orderId);
+        break;
+        
+    case (preg_match('/^\/admin\/orders\/(\d+)\/status$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $orderId = $matches[1];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->updateOrderStatus($orderId);
+        } else {
+            header("Location: /admin/orders/$orderId");
+            exit;
+        }
+        break;
+    
+    // Admin Users
+    case '/admin/users':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->users();
+        break;
+        
+    case (preg_match('/^\/admin\/users\/(\d+)$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $userId = $matches[1];
+        $adminController->userDetail($userId);
+        break;
+        
+    case (preg_match('/^\/admin\/users\/(\d+)\/role$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $userId = $matches[1];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->updateUserRole($userId);
+        } else {
+            header("Location: /admin/users/$userId");
+            exit;
+        }
+        break;
+        
+    case (preg_match('/^\/admin\/users\/(\d+)\/status$/', $path, $matches) ? true : false):
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $userId = $matches[1];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController->updateUserStatus($userId);
+        } else {
+            header("Location: /admin/users/$userId");
+            exit;
+        }
+        break;
+    
+    // Admin Reports
+    case '/admin/reports':
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Location: /login');
+            exit;
+        }
+        $adminController->reports();
+        break;
+    
+    // Admin Notifications
+    case '/admin/notifications':
+        $notificationController->adminIndex();
+        break;
+    
+    case '/admin/notifications/create':
+        $notificationController->create();
+        break;
+    
+    case '/admin/notifications/store':
+        $notificationController->store();
+        break;
+    
+    case '/admin/notifications/delete':
+        $notificationController->adminDeleteNotification();
+        break;
+    
+    case '/admin/users/search':
+        if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'admin') {
+            $query = $_GET['q'] ?? '';
+            $stmt = $db->prepare("SELECT user_id, username, email, fullname, role FROM users WHERE (username LIKE ? OR email LIKE ? OR fullname LIKE ?) LIMIT 10");
+            $searchTerm = "%$query%";
+            $stmt->bindParam(1, $searchTerm);
+            $stmt->bindParam(2, $searchTerm);
+            $stmt->bindParam(3, $searchTerm);
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            header('Content-Type: application/json');
+            echo json_encode($results);
+        } else {
+            header('HTTP/1.1 403 Forbidden');
+            echo json_encode(['error' => 'Unauthorized']);
+        }
+        break;
+    
     default:
         http_response_code(404);
         require __DIR__.'/app/Views/404.php';

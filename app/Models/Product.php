@@ -1,7 +1,7 @@
 <?php
 class Product {
     private $conn;
-    private $table_name = "Products";
+    private $table_name = "products";
 
     public $product_id;
     public $category_id;
@@ -20,8 +20,21 @@ class Product {
     public function read() {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
-                LEFT JOIN Categories c ON p.category_id = c.category_id
+                LEFT JOIN categories c ON p.category_id = c.category_id
                 WHERE p.is_available = 1
+                ORDER BY p.created_at DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt;
+    }
+    
+    // Lấy tất cả sản phẩm (cho admin - bao gồm cả không available)
+    public function readAll() {
+        $query = "SELECT p.*, c.name as category_name
+                FROM " . $this->table_name . " p
+                LEFT JOIN categories c ON p.category_id = c.category_id
                 ORDER BY p.created_at DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -34,7 +47,7 @@ class Product {
     public function readOne() {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
-                LEFT JOIN Categories c ON p.category_id = c.category_id
+                LEFT JOIN categories c ON p.category_id = c.category_id
                 WHERE p.product_id = :product_id
                 LIMIT 0,1";
 
@@ -52,21 +65,41 @@ class Product {
             $this->is_available = $row['is_available'];
             $this->is_featured = $row['is_featured'];
             $this->category_id = $row['category_id'];
-            return true;
+            return $this;
         }
         return false;
     }
 
     // Lấy sản phẩm theo danh mục
-    public function readByCategory($category_id) {
+    public function readByCategory($category_id, $limit = null, $excludeId = null) {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
-                LEFT JOIN Categories c ON p.category_id = c.category_id
-                WHERE p.category_id = :category_id AND p.is_available = 1
-                ORDER BY p.created_at DESC";
+                LEFT JOIN categories c ON p.category_id = c.category_id
+                WHERE p.category_id = :category_id AND p.is_available = 1";
+        
+        // Nếu có excludeId, loại trừ sản phẩm hiện tại
+        if ($excludeId) {
+            $query .= " AND p.product_id != :exclude_id";
+        }
+        
+        $query .= " ORDER BY RAND()";
+        
+        // Nếu có limit, giới hạn số lượng
+        if ($limit) {
+            $query .= " LIMIT :limit";
+        }
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":category_id", $category_id);
+        
+        if ($excludeId) {
+            $stmt->bindParam(":exclude_id", $excludeId);
+        }
+        
+        if ($limit) {
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        }
+        
         $stmt->execute();
 
         return $stmt;
@@ -76,7 +109,7 @@ class Product {
     public function readFeatured() {
         $query = "SELECT p.*, c.name as category_name
                 FROM " . $this->table_name . " p
-                LEFT JOIN Categories c ON p.category_id = c.category_id
+                LEFT JOIN categories c ON p.category_id = c.category_id
                 WHERE p.is_featured = 1 AND p.is_available = 1
                 ORDER BY p.created_at DESC
                 LIMIT 0,6";
@@ -111,6 +144,7 @@ class Product {
         $stmt->bindParam(":is_featured", $this->is_featured);
 
         if($stmt->execute()) {
+            $this->product_id = $this->conn->lastInsertId();
             return true;
         }
         return false;
@@ -163,5 +197,43 @@ class Product {
             return true;
         }
         return false;
+    }
+    
+    // Đếm tổng số sản phẩm
+    public function countAll() {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $row['total'];
+    }
+    
+    // Đếm số sản phẩm theo danh mục
+    public function countByCategory($category_id) {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE category_id = :category_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":category_id", $category_id);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $row['total'];
+    }
+    
+    // Lấy top sản phẩm bán chạy
+    public function getTopProducts($limit = 5) {
+        $query = "SELECT p.*, c.name as category_name, COUNT(od.product_id) as sold_count
+                FROM " . $this->table_name . " p
+                LEFT JOIN categories c ON p.category_id = c.category_id
+                LEFT JOIN orderitems od ON p.product_id = od.product_id
+                GROUP BY p.product_id
+                ORDER BY sold_count DESC
+                LIMIT :limit";
+                
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt;
     }
 } 

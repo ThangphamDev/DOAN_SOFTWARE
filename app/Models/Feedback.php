@@ -139,4 +139,17 @@ class Feedback {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function readByProduct($productId) {
+        $query = "SELECT f.*, u.username, u.full_name 
+                FROM {$this->table} f 
+                LEFT JOIN users u ON f.user_id = u.user_id 
+                LEFT JOIN orderitems oi ON f.order_id = oi.order_id 
+                WHERE oi.product_id = ? 
+                GROUP BY f.feedback_id
+                ORDER BY f.created_at DESC";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$productId]);
+        return $stmt;
+    }
 } 

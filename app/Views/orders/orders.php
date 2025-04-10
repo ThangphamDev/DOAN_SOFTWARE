@@ -1,3 +1,4 @@
+<?php include 'app/Views/components/header.php'; ?>
 <?php
 require_once __DIR__ . '/../../Models/Order.php';
 require_once __DIR__ . '/../../config/Database.php';
@@ -14,7 +15,7 @@ if (isset($_SESSION['user_id'])) {
     $orders = $order->getOrdersByUserId($_SESSION['user_id']);
 }
 
-include __DIR__ . '/../shares/header.php';
+
 ?>
 
 <div class="orders-section">
@@ -87,6 +88,7 @@ include __DIR__ . '/../shares/header.php';
     padding: 50px 0;
     min-height: calc(100vh - 60px);
     background-color: #f8f9fa;
+    margin-top: 80px;
 }
 
 .container {
@@ -323,4 +325,4 @@ h2 {
 }
 </style>
 
-<?php include __DIR__ . '/../shares/footer.php'; ?> 
+<?php include 'app/Views/components/footer.php'; ?> 

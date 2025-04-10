@@ -1,7 +1,7 @@
 <?php
 class Category {
     private $conn;
-    private $table_name = "Categories";
+    private $table_name = "categories";
 
     public $category_id;
     public $name;
