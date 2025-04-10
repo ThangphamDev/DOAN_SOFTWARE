@@ -1,0 +1,195 @@
+/* Admin Panel Styles */
+
+/* Sidebar */
+#sidebar {
+    min-height: 100vh;
+    background-color: #343a40;
+    padding-top: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .nav-link {
+    color: #ced4da;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.2rem;
+}
+
+.sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.5rem;
+}
+
+/* Content area */
+main {
+    padding-top: 1rem;
+}
+
+/* Card styles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 0.75rem 1rem;
+}
+
+/* Icon shape for cards */
+.icon-shape {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Actions buttons */
+.btn-action {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+/* Form labels */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Product image preview */
+.product-image-preview {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    padding: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+/* Variants section */
+.variants-container {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Dashboard stats */
+.stats-card {
+    border-left: 4px solid;
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-card.primary {
+    border-left-color: #4e73df;
+}
+
+.stats-card.success {
+    border-left-color: #1cc88a;
+}
+
+.stats-card.info {
+    border-left-color: #36b9cc;
+}
+
+.stats-card.warning {
+    border-left-color: #f6c23e;
+}
+
+/* Order status badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #sidebar {
+        min-height: auto;
+    }
+    
+    .sidebar-sticky {
+        position: relative;
+        top: 0;
+        height: auto;
+    }
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 300px;
+    width: 100%;
+}
+
+/* Product gallery in product detail */
+.product-gallery .thumbnail {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.product-gallery .thumbnail:hover,
+.product-gallery .thumbnail.active {
+    opacity: 1;
+    border-color: #0d6efd;
+}
+
+/* Custom file input */
+.custom-file-input:lang(vi) ~ .custom-file-label::after {
+    content: "Chọn file";
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .navbar, .btn, .no-print {
+        display: none !important;
+    }
+    
+    main {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+} 

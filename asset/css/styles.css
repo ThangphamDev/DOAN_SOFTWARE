@@ -1,4 +1,4 @@
-/* styles.css */
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f8f1e4;
@@ -7,12 +7,7 @@ body {
     color: #5a3e36;
 }
 
-header {
-    background-color: #8b5e3c;
-    color: white;
-    text-align: center;
-    padding: 20px;
-}
+
 
 .logo-container {
     display: flex;
