@@ -24,7 +24,7 @@ body {
 /* Hero Section */
 .menu-hero {
   background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-              url('/public/images/hero-coffee.jpg') no-repeat center center;
+              url('https://img.freepik.com/free-vector/realistic-coffee-shop-linkedin-banner_23-2149228444.jpg?t=st=1744274625~exp=1744278225~hmac=eba2276b4c30981c319da68b22ed6edd4264c4a48a371ac1977deb83fe696a8e&w=1380') no-repeat center center;
   background-size: cover;
   padding: 120px 0;
   text-align: center;

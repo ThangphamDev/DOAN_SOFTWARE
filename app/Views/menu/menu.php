@@ -253,6 +253,10 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                                                     <form action="/cart/add" method="POST" class="add-to-cart-form">
                                                         <input type="hidden" name="product_id" value="<?php echo $prod['product_id']; ?>">
                                                         <input type="hidden" name="quantity" value="1">
+                                                        <input type="hidden" name="ajax" value="1">
+                                                        <input type="hidden" name="name" value="<?php echo htmlspecialchars($prod['name']); ?>">
+                                                        <input type="hidden" name="price" value="<?php echo $prod['base_price']; ?>">
+                                                        <input type="hidden" name="image_url" value="<?php echo htmlspecialchars($prod['image_url']); ?>">
                                                         <button type="submit" class="btn btn-add-cart">
                                                             <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
                                                         </button>
@@ -300,6 +304,10 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                                     <p id="quickViewDescription"></p>
                                     <form action="/cart/add" method="POST" class="quick-view-form">
                                         <input type="hidden" name="product_id" id="quickViewProductId">
+                                        <input type="hidden" name="ajax" value="1">
+                                        <input type="hidden" name="name" id="quickViewNameHidden">
+                                        <input type="hidden" name="price" id="quickViewPriceHidden">
+                                        <input type="hidden" name="image_url" id="quickViewImageHidden">
                                         <div class="quantity-selector">
                                             <label for="quickViewQuantity">Số lượng:</label>
                                             <div class="input-group">
@@ -332,6 +340,12 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý lỗi hình ảnh
+        window.handleImageError = function(img) {
+            img.onerror = null; // Prevent infinite error loop
+            img.src = '/public/images/default-product.jpg';
+        };
+
         // Xử lý smooth scroll khi click vào danh mục
         document.querySelectorAll('.category-link').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -352,6 +366,40 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                         this.classList.add('active');
                     }
                 }
+            });
+        });
+
+        // Xử lý các form thêm vào giỏ hàng
+        document.querySelectorAll('.add-to-cart-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const productId = this.querySelector('input[name="product_id"]').value;
+                const quantity = this.querySelector('input[name="quantity"]').value;
+                const product = this.closest('.product-card');
+                const productName = product.querySelector('h4').innerText;
+                
+                // Tạo FormData object từ form
+                const formData = new FormData(this);
+                
+                // Sử dụng Fetch API để gửi AJAX request
+                fetch('/cart/add', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', `Đã thêm ${productName} vào giỏ hàng!`);
+                        // Cập nhật số lượng sản phẩm trong giỏ hàng trên header
+                        updateCartBadge(data.cart_count || 1);
+                    } else {
+                        showToast('error', data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+                });
             });
         });
 
@@ -379,31 +427,6 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
         // Observe tất cả các category sections
         document.querySelectorAll('.category-section').forEach(section => {
             observer.observe(section);
-        });
-
-        // Xử lý lỗi hình ảnh
-        function handleImageError(img) {
-            const container = img.parentElement;
-            container.classList.remove('loading');
-            container.classList.add('error');
-            container.setAttribute('data-error', img.alt || 'Hình ảnh không khả dụng');
-            sessionStorage.setItem('img_error_' + img.src, 'true');
-        }
-
-        function handleImageLoad(img) {
-            const container = img.parentElement;
-            container.classList.remove('loading');
-            container.classList.remove('error');
-            sessionStorage.removeItem('img_error_' + img.src);
-        }
-
-        // Check for cached error states on page load
-        document.querySelectorAll('.product-image img').forEach(img => {
-            if (sessionStorage.getItem('img_error_' + img.src) === 'true') {
-                handleImageError(img);
-            }
-            img.addEventListener('error', () => handleImageError(img));
-            img.addEventListener('load', () => handleImageLoad(img));
         });
 
         // Toggle giữa grid và list view
@@ -453,6 +476,9 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                 document.getElementById('quickViewDescription').innerText = productDescription;
                 document.getElementById('quickViewImage').src = productImage;
                 document.getElementById('quickViewProductId').value = productId;
+                document.getElementById('quickViewNameHidden').value = productName;
+                document.getElementById('quickViewPriceHidden').value = productPrice;
+                document.getElementById('quickViewImageHidden').value = productImage;
                 document.getElementById('quickViewDetailLink').href = `/menu/product/${productId}`;
                 
                 // Show the rating
@@ -471,11 +497,17 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                 const productId = this.getAttribute('data-product-id');
                 const productCard = this.closest('.product-card');
                 const productName = productCard.querySelector('h4').innerText;
+                const productImage = productCard.querySelector('.product-image img').src;
+                const productPrice = productCard.querySelector('.price').innerText.replace(/\D/g, '');
                 
                 // Create form data
                 const formData = new FormData();
                 formData.append('product_id', productId);
                 formData.append('quantity', 1);
+                formData.append('ajax', 1);
+                formData.append('name', productName);
+                formData.append('price', productPrice);
+                formData.append('image_url', productImage);
                 
                 // Send AJAX request
                 fetch('/cart/add', {
@@ -487,9 +519,7 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                     if (data.success) {
                         showToast('success', `Đã thêm ${productName} vào giỏ hàng!`);
                         // Update cart count if applicable
-                        if (data.cartCount) {
-                            document.querySelector('.cart-count').innerText = data.cartCount;
-                        }
+                        updateCartBadge(data.cart_count || 1);
                     } else {
                         showToast('error', data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
                     }
@@ -498,6 +528,52 @@ $sortOption = isset($_GET['sort']) ? $_GET['sort'] : 'default';
                     console.error('Error:', error);
                     showToast('error', 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
                 });
+            });
+        });
+
+        // Hàm cập nhật số lượng trên biểu tượng giỏ hàng
+        function updateCartBadge(count) {
+            const cartBadge = document.querySelector('.cart-badge');
+            if (cartBadge) {
+                cartBadge.textContent = count;
+                cartBadge.classList.add('animate__animated', 'animate__rubberBand');
+                setTimeout(() => {
+                    cartBadge.classList.remove('animate__animated', 'animate__rubberBand');
+                }, 1000);
+            }
+        }
+
+        // Xử lý form "Thêm vào giỏ" trong modal Quick View
+        document.querySelector('.quick-view-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productId = document.getElementById('quickViewProductId').value;
+            const quantity = document.getElementById('quickViewQuantity').value;
+            const productName = document.getElementById('quickViewTitle').innerText;
+            
+            // Create form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/cart/add', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', `Đã thêm ${productName} vào giỏ hàng!`);
+                    // Đóng modal
+                    bootstrap.Modal.getInstance(document.getElementById('quickViewModal')).hide();
+                    // Update cart count
+                    updateCartBadge(data.cart_count || 1);
+                } else {
+                    showToast('error', data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
             });
         });
 

@@ -124,23 +124,24 @@ $product = new Product($db);
             max-width: 800px;
             text-align: center;
             z-index: 1;
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(0, 0, 0, 0.15);
             border-radius: 10px;
             padding: 30px;
             padding-top: 15px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(3px);
             width: 80%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .hero-subtitle {
             font-size: 1.2rem;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 10px;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 2px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
         
         .hero-title {
@@ -148,15 +149,15 @@ $product = new Product($db);
             font-weight: 700;
             margin-bottom: 1rem;
             line-height: 1.2;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
         }
         
         .hero-desc {
             font-size: 1.1rem;
-            font-weight: 400;
+            font-weight: 500;
             margin-bottom: 2rem;
             line-height: 1.5;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
         
         .hero-buttons {
@@ -180,6 +181,8 @@ $product = new Product($db);
         .btn-primary {
             background-color: var(--primary);
             color: var(--white);
+            border: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
         
         .btn-primary:hover {
@@ -192,6 +195,7 @@ $product = new Product($db);
             background-color: transparent;
             color: var(--white);
             border: 2px solid var(--white);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
         
         .btn-outline:hover {
@@ -593,39 +597,122 @@ $product = new Product($db);
         .about-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 50px;
+            gap: 60px;
             align-items: center;
         }
         
         .about-image {
             position: relative;
+            border-radius: 25px;
+            overflow: visible;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: var(--white);
+            z-index: 1;
+        }
+        
+        .about-img-main {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
             border-radius: 20px;
-            overflow: hidden;
+            transition: transform 0.5s ease;
             box-shadow: var(--shadow);
+        }
+        
+        .about-img-secondary {
+            width: 90%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 20px;
+            transition: all 0.5s ease;
+            align-self: flex-end;
+            margin-top: -60px;
+            border: 8px solid var(--white);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 2;
+            filter: brightness(1.05);
+        }
+        
+        .about-image:after {
+            content: '';
+            position: absolute;
+            top: 50px;
+            right: -30px;
+            width: 80px;
+            height: 80px;
+            background-color: var(--accent);
+            opacity: 0.2;
+            border-radius: 20px;
+            z-index: -1;
+            transform: rotate(45deg);
+        }
+        
+        .about-image:hover .about-img-main {
+            transform: scale(1.05);
+        }
+        
+        .about-image:hover .about-img-secondary {
+            transform: scale(1.08) translateY(-15px);
         }
         
         .about-image:before {
             content: '';
             position: absolute;
-            top: 20px;
-            left: -20px;
+            top: 30px;
+            left: -30px;
             width: 100%;
-            height: 100%;
-            border: 5px solid var(--accent);
-            border-radius: 20px;
+            height: 75%;
+            border: 6px solid var(--accent);
+            border-radius: 25px;
             z-index: -1;
         }
         
-        .about-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 20px;
-            transition: transform 0.5s ease;
+        .about-image-decor {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 4px dashed var(--accent);
+            border-radius: 50%;
+            top: 30%;
+            left: -75px;
+            z-index: -1;
         }
         
-        .about-image:hover img {
-            transform: scale(1.05);
+        .about-image-badge {
+            position: absolute;
+            bottom: 60px;
+            left: 40px;
+            background-color: var(--primary);
+            color: var(--white);
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border: 4px solid var(--white);
+        }
+        
+        .about-image-badge i {
+            font-size: 26px;
+            margin-bottom: 3px;
+            color: var(--accent);
+        }
+        
+        .about-image-badge span {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         
         .about-content h3 {
@@ -978,7 +1065,27 @@ $product = new Product($db);
             }
             
             .about-image {
-                margin-bottom: 30px;
+                margin-bottom: 70px;
+                width: 100%;
+                max-width: 550px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .about-img-secondary {
+                margin-top: -50px;
+                width: 85%;
+            }
+            
+            .about-image-badge {
+                bottom: 50px;
+                left: 30px;
+                width: 75px;
+                height: 75px;
+            }
+            
+            .about-image-badge i {
+                font-size: 22px;
             }
             
             .gallery-grid {
@@ -1074,6 +1181,37 @@ $product = new Product($db);
                 grid-template-columns: 1fr;
             }
             
+            .about-image {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .about-img-secondary {
+                width: 80%;
+                margin-top: -40px;
+            }
+            
+            .about-image-decor {
+                width: 100px;
+                height: 100px;
+                left: -50px;
+            }
+            
+            .about-image-badge {
+                width: 65px;
+                height: 65px;
+                bottom: 40px;
+                left: 20px;
+            }
+            
+            .about-image-badge i {
+                font-size: 20px;
+            }
+            
+            .about-image-badge span {
+                font-size: 10px;
+            }
+            
             .products-grid {
                 grid-template-columns: 1fr;
             }
@@ -1152,7 +1290,7 @@ $product = new Product($db);
             <div class="swiper hero-swiper">
                 <div class="swiper-wrapper">
                     <div class="swiper-slide hero-slide">
-                        <img src="/public/images/home/Picture.png" alt="T&2K Coffee" class="hero-slide-bg">
+                        <img src="/public/images/Banner/banner_doan6.jpg" alt="T&2K Coffee" class="hero-slide-bg">
                         <div class="hero-content">
                             <span class="hero-subtitle">Chào mừng đến với</span>
                             <h1 class="hero-title">T&2K Coffee</h1>
@@ -1164,7 +1302,7 @@ $product = new Product($db);
                         </div>
                     </div>
                     <div class="swiper-slide hero-slide">
-                        <img src="/public/images/home/Insite.png" alt="Khuyến mãi đặc biệt" class="hero-slide-bg">
+                        <img src="/public/images/Banner/banner_doan7.jpg" alt="Khuyến mãi đặc biệt" class="hero-slide-bg">
                         <div class="hero-content">
                             <span class="hero-subtitle">Ưu đãi mùa hè</span>
                             <h1 class="hero-title">Khuyến mãi đặc biệt</h1>
@@ -1176,14 +1314,26 @@ $product = new Product($db);
                         </div>
                     </div>
                     <div class="swiper-slide hero-slide">
-                        <img src="/public/images/home/milk-tea.jpg" alt="Trà sữa mới" class="hero-slide-bg">
+                        <img src="/public/images/Banner/banner_doan8.png" alt="Hương vị đặc trưng" class="hero-slide-bg">
                         <div class="hero-content">
-                            <span class="hero-subtitle">Món mới</span>
-                            <h1 class="hero-title">Trà sữa trân châu đường đen</h1>
-                            <p class="hero-desc">Hương vị mới lạ, thơm ngon khó cưỡng. Đặt ngay để thưởng thức!</p>
+                            <span class="hero-subtitle">Hương vị đặc trưng</span>
+                            <h1 class="hero-title">Cà phê nguyên chất</h1>
+                            <p class="hero-desc">Trải nghiệm hương vị đậm đà từ những hạt cà phê được chọn lọc kỹ lưỡng.</p>
                             <div class="hero-buttons">
                                 <a href="/products" class="btn btn-primary">Thử ngay</a>
                                 <a href="/menu" class="btn btn-outline">Xem menu</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide hero-slide">
+                        <img src="/public/images/Banner/banner_doan9.png" alt="Không gian độc đáo" class="hero-slide-bg">
+                        <div class="hero-content">
+                            <span class="hero-subtitle">Thưởng thức</span>
+                            <h1 class="hero-title">Không gian độc đáo</h1>
+                            <p class="hero-desc">Đắm mình trong không gian hiện đại kết hợp nét truyền thống tại T&2K Coffee.</p>
+                            <div class="hero-buttons">
+                                <a href="/about" class="btn btn-primary">Khám phá</a>
+                                <a href="/contact" class="btn btn-outline">Đặt bàn</a>
                             </div>
                         </div>
                     </div>
@@ -1298,7 +1448,13 @@ $product = new Product($db);
             </div>
             <div class="about-wrapper">
                 <div class="about-image" data-aos="fade-right">
-                    <img src="/public/images/home/Insite.png" alt="Về quán coffee">
+                    <img src="/public/images/Banner/banner_doan6.jpg" alt="Về quán coffee" class="about-img-main">
+                    <img src="/public/images/Banner/banner_doan7.jpg" alt="Không gian quán coffee" class="about-img-secondary">
+                    <div class="about-image-decor"></div>
+                    <div class="about-image-badge">
+                        <i class="fas fa-coffee"></i>
+                        <span>Est. 2022</span>
+                    </div>
                 </div>
                 <div class="about-content" data-aos="fade-left">
                     <h3>Coffee T&2K - Nơi Hương Vị Gặp Gỡ Cảm Xúc</h3>

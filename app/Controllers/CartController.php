@@ -53,9 +53,16 @@ class CartController extends BaseController {
         
         // Hỗ trợ cả JSON từ Ajax và form truyền thống
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($isAjaxRequest) {
-                // Xử lý dữ liệu JSON
-                $data = $this->getJsonInput();
+            if ($isAjaxRequest || isset($_POST['ajax'])) {
+                // Xử lý dữ liệu JSON hoặc form data cho AJAX
+                $data = [];
+                
+                if ($isAjaxRequest && $this->isJsonRequest()) {
+                    $data = $this->getJsonInput();
+                } else {
+                    $data = $_POST;
+                }
+                
                 $product_id = $data['product_id'] ?? null;
                 $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 1;
                 
@@ -90,14 +97,26 @@ class CartController extends BaseController {
                     $this->addItemToCart($product_id, $name, $totalPrice, $quantity, $image_url, $variants);
                     
                     // Trả về kết quả
-                    $this->sendJsonResponse(true, 'Đã thêm sản phẩm vào giỏ hàng', 200, [
+                    $response = [
+                        'success' => true,
+                        'message' => 'Đã thêm sản phẩm vào giỏ hàng',
                         'cart_count' => $this->getCartCount(),
                         'cart_total' => $this->getTotal()
-                    ]);
-                    return;
+                    ];
+                    
+                    header('Content-Type: application/json');
+                    echo json_encode($response);
+                    exit;
                 } else {
-                    $this->sendJsonResponse(false, 'Sản phẩm không tồn tại', 404);
-                    return;
+                    $response = [
+                        'success' => false,
+                        'message' => 'Sản phẩm không tồn tại'
+                    ];
+                    
+                    header('Content-Type: application/json');
+                    http_response_code(404);
+                    echo json_encode($response);
+                    exit;
                 }
             } else {
                 // Xử lý form truyền thống
@@ -136,7 +155,15 @@ class CartController extends BaseController {
         } else {
             // Phương thức không hợp lệ
             if ($isAjaxRequest) {
-                $this->sendJsonResponse(false, 'Phương thức không hợp lệ', 405);
+                $response = [
+                    'success' => false,
+                    'message' => 'Phương thức không hợp lệ'
+                ];
+                
+                header('Content-Type: application/json');
+                http_response_code(405);
+                echo json_encode($response);
+                exit;
             } else {
                 $this->redirect('/products');
             }
@@ -147,9 +174,8 @@ class CartController extends BaseController {
      * Thêm sản phẩm vào giỏ hàng (helper method)
      */
     private function addItemToCart($product_id, $name, $price, $quantity, $image_url, $variants = []) {
-        // Giới hạn số lượng
+        // Giới hạn số lượng tối thiểu
         if ($quantity < 1) $quantity = 1;
-        if ($quantity > 10) $quantity = 10;
         
         // Kiểm tra sản phẩm đã có trong giỏ hàng chưa
         $found = false;
@@ -183,7 +209,6 @@ class CartController extends BaseController {
                 
                 // Cập nhật số lượng
                 $newQuantity = $item['quantity'] + $quantity;
-                if ($newQuantity > 10) $newQuantity = 10;
                 $item['quantity'] = $newQuantity;
                 $found = true;
                 break;
@@ -211,9 +236,18 @@ class CartController extends BaseController {
     public function update() {
         $this->ensureCartSession();
         
+        // Kiểm tra request Ajax
+        $isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('/cart');
-            return;
+            if ($isAjaxRequest) {
+                $this->sendJsonResponse(false, 'Phương thức không hợp lệ', 405);
+                return;
+            } else {
+                $this->redirect('/cart');
+                return;
+            }
         }
         
         $index = isset($_POST['index']) ? (int)$_POST['index'] : -1;
@@ -221,20 +255,49 @@ class CartController extends BaseController {
         
         // Kiểm tra dữ liệu hợp lệ
         if ($index < 0 || !isset($_SESSION['cart'][$index])) {
-            $_SESSION['error'] = 'Sản phẩm không tồn tại trong giỏ hàng';
-            $this->redirect('/cart');
-            return;
+            if ($isAjaxRequest) {
+                $this->sendJsonResponse(false, 'Sản phẩm không tồn tại trong giỏ hàng', 404);
+                return;
+            } else {
+                $_SESSION['error'] = 'Sản phẩm không tồn tại trong giỏ hàng';
+                $this->redirect('/cart');
+                return;
+            }
         }
         
-        // Giới hạn số lượng
+        // Lưu số lượng ban đầu cho trường hợp cần khôi phục
+        $originalQuantity = $_SESSION['cart'][$index]['quantity'];
+        
+        // Giới hạn số lượng thấp nhất là 1
         if ($quantity < 1) $quantity = 1;
-        if ($quantity > 10) $quantity = 10;
         
         // Cập nhật số lượng
         $_SESSION['cart'][$index]['quantity'] = $quantity;
         $_SESSION['success'] = 'Đã cập nhật giỏ hàng';
         
-        $this->redirect('/cart');
+        // Tính toán tiền cho sản phẩm cụ thể và tổng đơn hàng
+        $itemSubtotal = $_SESSION['cart'][$index]['price'] * $quantity;
+        $subtotal = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+        
+        if ($isAjaxRequest) {
+            $response = [
+                'success' => true,
+                'message' => 'Đã cập nhật giỏ hàng',
+                'item_subtotal' => number_format($itemSubtotal, 0, ',', '.'),
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'total' => number_format($subtotal, 0, ',', '.'),
+                'cart_count' => $this->getCartCount(),
+                'original_quantity' => $originalQuantity
+            ];
+            
+            $this->sendJsonResponse(true, 'Đã cập nhật giỏ hàng', 200, $response);
+            return;
+        } else {
+            $this->redirect('/cart');
+        }
     }
     
     /**
@@ -243,25 +306,58 @@ class CartController extends BaseController {
     public function remove() {
         $this->ensureCartSession();
         
+        // Kiểm tra request Ajax
+        $isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('/cart');
-            return;
+            if ($isAjaxRequest) {
+                $this->sendJsonResponse(false, 'Phương thức không hợp lệ', 405);
+                return;
+            } else {
+                $this->redirect('/cart');
+                return;
+            }
         }
         
         $index = isset($_POST['index']) ? (int)$_POST['index'] : -1;
         
         // Kiểm tra dữ liệu hợp lệ
         if ($index < 0 || !isset($_SESSION['cart'][$index])) {
-            $_SESSION['error'] = 'Sản phẩm không tồn tại trong giỏ hàng';
-            $this->redirect('/cart');
-            return;
+            if ($isAjaxRequest) {
+                $this->sendJsonResponse(false, 'Sản phẩm không tồn tại trong giỏ hàng', 404);
+                return;
+            } else {
+                $_SESSION['error'] = 'Sản phẩm không tồn tại trong giỏ hàng';
+                $this->redirect('/cart');
+                return;
+            }
         }
         
         // Xóa sản phẩm
         array_splice($_SESSION['cart'], $index, 1);
         $_SESSION['success'] = 'Đã xóa sản phẩm khỏi giỏ hàng';
         
-        $this->redirect('/cart');
+        // Tính toán tổng đơn hàng mới
+        $subtotal = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+        
+        if ($isAjaxRequest) {
+            $response = [
+                'success' => true,
+                'message' => 'Đã xóa sản phẩm khỏi giỏ hàng',
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'total' => number_format($subtotal, 0, ',', '.'),
+                'cart_count' => $this->getCartCount()
+            ];
+            
+            $this->sendJsonResponse(true, 'Đã xóa sản phẩm khỏi giỏ hàng', 200, $response);
+            return;
+        } else {
+            $this->redirect('/cart');
+        }
     }
     
     /**
@@ -667,5 +763,11 @@ class CartController extends BaseController {
         
         header("Location: /cart");
         exit();
+    }
+
+    // Kiểm tra nếu request là JSON
+    private function isJsonRequest() {
+        return (isset($_SERVER['CONTENT_TYPE']) && 
+                (strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false));
     }
 }
