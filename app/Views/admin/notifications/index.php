@@ -97,7 +97,7 @@ $content = ob_start();
                                     <td><?php echo date('d/m/Y H:i', strtotime($notification['created_at'])); ?></td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-info view-notification-btn" 
-                                                data-toggle="modal" data-target="#viewNotificationModal"
+                                                data-bs-toggle="modal" data-bs-target="#viewNotificationModal"
                                                 data-id="<?php echo $notification['notification_id']; ?>"
                                                 data-title="<?php echo htmlspecialchars($notification['title']); ?>"
                                                 data-message="<?php echo htmlspecialchars($notification['message']); ?>"
@@ -108,7 +108,7 @@ $content = ob_start();
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-danger delete-notification-btn"
-                                                data-toggle="modal" data-target="#deleteNotificationModal"
+                                                data-bs-toggle="modal" data-bs-target="#deleteNotificationModal"
                                                 data-id="<?php echo $notification['notification_id']; ?>"
                                                 data-title="<?php echo htmlspecialchars($notification['title']); ?>">
                                             <i class="fas fa-trash"></i>

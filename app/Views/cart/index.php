@@ -7,54 +7,59 @@ include_once 'app/Views/components/header.php';
 <link rel="stylesheet" href="/public/css/cart.css">
 
 <style>
-body {
-    padding-top: 90px !important;
+/* Sử dụng namespace để tránh xung đột */
+.cart-page {
+    padding-top: 30px;
     background-color: #f8f9fa;
 }
 
-header {
-    position: fixed !important;
-    width: 100% !important;
-    top: 0 !important;
-    left: 0 !important;
-    z-index: 1000 !important;
-    transform: none !important;
-    height: auto !important;
-    max-height: none !important;
+/* Chỉ áp dụng fixed header cho trang cart */
+.cart-page header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transform: none;
+    height: auto;
+    max-height: none;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-header .container {
-    max-width: 1200px !important;
-    margin: 0 auto !important;
+.cart-page header .container {
+    max-width: 1200px;
+    padding: 0 15px;
+    margin: 0 auto;
 }
 
-header .navbar {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
+.cart-page header .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
-header .logo h1 {
-    font-size: 24px !important;
-    margin: 0 !important;
+.cart-page header .logo h1 {
+    font-size: 24px;
+    margin: 0;
 }
 
-.nav-links {
-    display: flex !important;
-    align-items: center !important;
+.cart-page .nav-links {
+    display: flex;
+    align-items: center;
 }
 
-.nav-actions {
-    display: flex !important;
-    align-items: center !important;
+.cart-page .nav-actions {
+    display: flex;
+    align-items: center;
 }
 
+/* Toast container không liên quan đến header nên có thể giữ nguyên */
 .toast-container {
     z-index: 9999;
 }
 
+/* Trang giỏ hàng styles */
 .page-title {
     font-size: 28px;
     margin-bottom: 30px;
@@ -456,6 +461,7 @@ hr {
     margin-bottom: 20px;
 }
 
+/* Responsive cho trang giỏ hàng */
 @media (max-width: 767px) {
     .cart-item-content {
         flex-wrap: wrap;
@@ -479,7 +485,7 @@ hr {
     }
 }
 </style>
-
+<body class="cart-page">
 <div class="container py-5">
     <div class="row">
         <div class="col-12">
@@ -619,7 +625,7 @@ hr {
         </div>
     </div>
 </div>
-
+</body>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Thêm toast container

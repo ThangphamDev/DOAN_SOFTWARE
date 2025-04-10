@@ -1318,7 +1318,7 @@
                     $firstVariant = true;
                     foreach ($variantsByType[$type] as $variant): 
                     ?>
-                    <button class="variant-btn <?php echo $firstVariant ? 'active' : ''; ?>" 
+                    <button type="button" class="variant-btn <?php echo $firstVariant ? 'active' : ''; ?>" 
                             data-type="<?php echo htmlspecialchars($variant['variant_type']); ?>"
                             data-value="<?php echo htmlspecialchars($variant['variant_value']); ?>" 
                             data-price="<?php echo $variant['additional_price']; ?>">
@@ -1360,10 +1360,18 @@
                 <input type="hidden" name="image_url" value="<?php echo htmlspecialchars($product->image_url); ?>">
                 <input type="hidden" name="quantity" id="form-quantity" value="1">
                 <input type="hidden" name="ajax" value="1">
+                <input type="hidden" name="csrf_token" value="<?php echo isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : ''; ?>">
                 
-                <?php if (isset($selectedVariants) && !empty($selectedVariants)): ?>
-                  <?php foreach ($selectedVariants as $type => $variant): ?>
-                    <input type="hidden" class="variant-input" name="variants[<?php echo $type; ?>]" value="<?php echo $variant['value']; ?>" data-price="<?php echo $variant['price']; ?>">
+                <?php if (isset($variantsByType) && !empty($variantsByType)): ?>
+                  <?php foreach ($variantsByType as $type => $variants): ?>
+                    <?php if (isset($variants[0])): ?>
+                      <input type="hidden" class="variant-input" 
+                             name="variants[<?php echo $type; ?>][value]" 
+                             value="<?php echo htmlspecialchars($variants[0]['variant_value']); ?>">
+                      <input type="hidden" class="variant-input" 
+                             name="variants[<?php echo $type; ?>][price]" 
+                             value="<?php echo $variants[0]['additional_price']; ?>">
+                    <?php endif; ?>
                   <?php endforeach; ?>
                 <?php endif; ?>
                 
@@ -1738,6 +1746,29 @@
           
           totalAdditionalPrice += price;
           
+          // Cập nhật input hidden tương ứng
+          let valueInput = document.querySelector(`.variant-input[name="variants[${type}][value]"]`);
+          let priceInput = document.querySelector(`.variant-input[name="variants[${type}][price]"]`);
+          
+          if (!valueInput) {
+            valueInput = document.createElement('input');
+            valueInput.type = 'hidden';
+            valueInput.className = 'variant-input';
+            valueInput.name = `variants[${type}][value]`;
+            document.querySelector('.add-to-cart-form').appendChild(valueInput);
+          }
+          
+          if (!priceInput) {
+            priceInput = document.createElement('input');
+            priceInput.type = 'hidden';
+            priceInput.className = 'variant-input';
+            priceInput.name = `variants[${type}][price]`;
+            document.querySelector('.add-to-cart-form').appendChild(priceInput);
+          }
+          
+          valueInput.value = value;
+          priceInput.value = price;
+          
           // Cập nhật hiển thị giá
           updatePriceDisplay();
         });
@@ -1808,31 +1839,45 @@
           // Cập nhật giá trị quantity
           document.getElementById('form-quantity').value = quantityInput.value;
           
-          // Cập nhật các biến thể đã chọn
+          // Lấy dữ liệu từ form
+          const formData = {
+            product_id: parseInt(this.querySelector('input[name="product_id"]').value),
+            name: this.querySelector('input[name="name"]').value,
+            price: parseFloat(this.querySelector('input[name="price"]').value),
+            image_url: this.querySelector('input[name="image_url"]').value,
+            quantity: parseInt(this.querySelector('input[name="quantity"]').value),
+            ajax: 1,
+            variants: []
+          };
+          
+          // Thêm các biến thể đã chọn vào mảng variants
           for (const type in selectedVariants) {
-            const input = this.querySelector(`.variant-input[name="variants[${type}]"]`);
-            if (input) {
-              input.value = selectedVariants[type].value;
-              input.setAttribute('data-price', selectedVariants[type].price);
-            } else {
-              // Nếu chưa có input, tạo mới
-              const newInput = document.createElement('input');
-              newInput.type = 'hidden';
-              newInput.className = 'variant-input';
-              newInput.name = `variants[${type}]`;
-              newInput.value = selectedVariants[type].value;
-              newInput.setAttribute('data-price', selectedVariants[type].price);
-              this.appendChild(newInput);
-            }
+            formData.variants.push({
+              type: type,
+              value: selectedVariants[type].value,
+              price: selectedVariants[type].price
+            });
           }
           
-          // Dùng Fetch API để gửi dữ liệu form
+          // Log để debug
+          console.log('Form data:', formData);
+          console.log('Selected variants:', selectedVariants);
+          
+          // Gửi request đến endpoint
           fetch('/cart/add', {
             method: 'POST',
-            body: new FormData(this)
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('Status code:', response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
               // Cập nhật số lượng giỏ hàng
               updateCartCount(data.cart_count);
@@ -1857,15 +1902,47 @@
           // Cập nhật giá trị quantity
           document.getElementById('form-quantity').value = quantityInput.value;
           
-          // Sử dụng cùng form để thêm vào giỏ hàng trước
-          const formData = new FormData(addToCartForm);
+          // Lấy dữ liệu từ form
+          const formData = {
+            product_id: parseInt(addToCartForm.querySelector('input[name="product_id"]').value),
+            name: addToCartForm.querySelector('input[name="name"]').value,
+            price: parseFloat(addToCartForm.querySelector('input[name="price"]').value),
+            image_url: addToCartForm.querySelector('input[name="image_url"]').value,
+            quantity: parseInt(addToCartForm.querySelector('input[name="quantity"]').value),
+            ajax: 1,
+            variants: []
+          };
           
+          // Thêm các biến thể đã chọn vào mảng variants
+          for (const type in selectedVariants) {
+            formData.variants.push({
+              type: type,
+              value: selectedVariants[type].value,
+              price: selectedVariants[type].price
+            });
+          }
+          
+          // Thêm tham số redirect để chuyển đến trang thanh toán
+          formData.redirect = 'checkout';
+          
+          // Log để debug
+          console.log('Buy now data:', formData);
+          
+          // Gửi request đến endpoint
           fetch('/cart/add', {
             method: 'POST',
-            body: formData
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('Status code:', response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
               // Chuyển đến trang thanh toán
               window.location.href = '/checkout';
@@ -1884,15 +1961,16 @@
       function updateCartCount(count) {
         console.log('Updating cart count to:', count);
         
-        // Tìm badge số lượng giỏ hàng
-        const cartBadge = document.querySelector('.cart-badge');
-        if (cartBadge) {
-          cartBadge.textContent = count;
-          cartBadge.classList.add('update');
-          setTimeout(() => {
-            cartBadge.classList.remove('update');
-          }, 500);
-        }
+        // Tìm tất cả các badge số lượng giỏ hàng
+        document.querySelectorAll('.cart-badge, .cart-count').forEach(badge => {
+          if (badge) {
+            badge.textContent = count;
+            badge.classList.add('update');
+            setTimeout(() => {
+              badge.classList.remove('update');
+            }, 500);
+          }
+        });
       }
       
       // Hiển thị toast notification

@@ -22,11 +22,13 @@ require_once __DIR__.'/app/Controllers/AdminController.php';
 require_once __DIR__.'/app/Controllers/ProfileController.php';
 require_once __DIR__.'/app/Controllers/OrderController.php';
 require_once __DIR__.'/app/Controllers/NotificationController.php';
+require_once __DIR__.'/app/Controllers/ContactController.php';
 $cartController = new App\Controllers\CartController($db);
 $adminController = new AdminController($db);
 $profileController = new ProfileController($db);
 $orderController = new OrderController($db);
 $notificationController = new NotificationController($db);
+$contactController = new ContactController($db);
 
 // Load routes configuration
 require_once __DIR__.'/routes/routes.php';
@@ -267,6 +269,24 @@ switch ($path) {
         
     case '/notifications/unread-count':
         $notificationController->getUnreadCount();
+        break;
+        
+    case (preg_match('/^\/notifications\/detail\/(\d+)$/', $path, $matches) ? true : false):
+        $notificationId = $matches[1];
+        $notificationController->detail($notificationId);
+        break;
+        
+    // Trang giới thiệu và liên hệ
+    case '/about':
+        $contactController->about();
+        break;
+        
+    case '/contact':
+        $contactController->index();
+        break;
+        
+    case '/contact/send':
+        $contactController->send();
         break;
         
     case '/logout':

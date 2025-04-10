@@ -153,17 +153,36 @@ class NotificationController {
     // Xóa thông báo (cho người dùng)
     public function delete() {
         if(!isset($_SESSION['user_id']) || !isset($_POST['notification_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Thiếu thông tin']);
-            exit();
+            if (isset($_POST['redirect'])) {
+                header('Location: /notifications');
+                exit();
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Thiếu thông tin']);
+                exit();
+            }
         }
 
         $this->notification->notification_id = $_POST['notification_id'];
         $this->notification->user_id = $_SESSION['user_id'];
         
-        if($this->notification->delete()) {
-            echo json_encode(['success' => true]);
+        $result = $this->notification->delete();
+        
+        // Nếu có tham số redirect, thực hiện chuyển hướng sau khi xóa
+        if (isset($_POST['redirect'])) {
+            if ($result) {
+                $_SESSION['success'] = 'Đã xóa thông báo thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể xóa thông báo.';
+            }
+            header('Location: /notifications');
+            exit();
         } else {
-            echo json_encode(['success' => false, 'message' => 'Không thể xóa thông báo']);
+            // Trả về JSON response cho AJAX requests
+            if($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa thông báo']);
+            }
         }
     }
 
@@ -176,6 +195,43 @@ class NotificationController {
 
         $count = $this->notification->getUnreadCount($_SESSION['user_id']);
         echo json_encode(['count' => $count]);
+    }
+
+    // Hiển thị chi tiết thông báo
+    public function detail($id = null) {
+        if(!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit();
+        }
+
+        if($id === null) {
+            header('Location: /notifications');
+            exit();
+        }
+
+        // Lấy thông tin chi tiết thông báo
+        $notification = $this->notification->getById($id, $_SESSION['user_id']);
+        
+        if(!$notification) {
+            header('Location: /notifications');
+            exit();
+        }
+
+        // Lấy thông báo liên quan
+        $related_notifications = $this->notification->getRelated($id, $_SESSION['user_id']);
+        
+        // Nếu là request AJAX đánh dấu đã đọc, không cần load view
+        if(isset($_POST['ajax']) && $_POST['ajax'] === 'true') {
+            // Đánh dấu đã đọc
+            $this->notification->notification_id = $id;
+            $this->notification->user_id = $_SESSION['user_id'];
+            $this->notification->markAsRead();
+            
+            echo json_encode(['success' => true]);
+            exit();
+        }
+        
+        require_once __DIR__ . '/../Views/notifications/notification_detail.php';
     }
 
     // Xóa thông báo (cho admin)

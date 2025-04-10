@@ -42,7 +42,7 @@ include_once('app/Views/components/header.php');
                                     <i class="fas fa-bell text-secondary"></i>
                                 <?php endif; ?>
                             </div>
-                            <div class="notification-content">
+                            <a href="/notifications/detail/<?= $notification['notification_id'] ?>" class="notification-content">
                                 <h3 class="notification-title"><?= htmlspecialchars($notification['title']) ?></h3>
                                 <p class="notification-text"><?= htmlspecialchars($notification['message']) ?></p>
                                 <div class="notification-meta">
@@ -50,7 +50,7 @@ include_once('app/Views/components/header.php');
                                         <i class="far fa-clock"></i> <?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?>
                                     </span>
                                 </div>
-                            </div>
+                            </a>
                             <div class="notification-actions">
                                 <?php if (!$notification['is_read']): ?>
                                     <button class="mark-read-btn" data-id="<?= $notification['notification_id'] ?>">
@@ -158,6 +158,14 @@ include_once('app/Views/components/header.php');
     
     .notification-content {
         flex: 1;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .notification-content:hover {
+        text-decoration: none;
+        color: inherit;
     }
     
     .notification-title {
