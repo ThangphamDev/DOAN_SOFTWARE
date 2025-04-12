@@ -53,10 +53,11 @@ class Notification {
         
         $stmt = $this->conn->prepare($query);
         
-        // Sanitize input
+        // Sanitize input - Không lọc HTML trong message để giữ lại emoji
         $this->user_id = htmlspecialchars(strip_tags($this->user_id));
         $this->title = htmlspecialchars(strip_tags($this->title));
-        $this->message = htmlspecialchars(strip_tags($this->message));
+        // Không áp dụng strip_tags cho message để giữ nguyên emoji
+        // $this->message = htmlspecialchars(strip_tags($this->message));
         $this->type = htmlspecialchars(strip_tags($this->type));
         $this->is_read = 0; // Mặc định là chưa đọc
         

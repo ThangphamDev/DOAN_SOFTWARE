@@ -130,9 +130,7 @@ $content = ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="viewNotificationModalLabel">Chi tiết thông báo</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="notification-detail">
@@ -152,7 +150,7 @@ $content = ob_start();
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -164,16 +162,14 @@ $content = ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteNotificationModalLabel">Xác nhận xóa</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc chắn muốn xóa thông báo "<span id="delete-notification-title"></span>"?</p>
                 <p class="text-danger">Hành động này không thể hoàn tác.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <form id="delete-notification-form" action="/admin/notifications/delete" method="post">
                     <input type="hidden" name="notification_id" id="delete-notification-id">
                     <button type="submit" class="btn btn-danger">Xóa</button>
@@ -194,6 +190,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Khởi tạo các modal
+    var viewModal = new bootstrap.Modal(document.getElementById('viewNotificationModal'));
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteNotificationModal'));
     
     // Xử lý modal xem thông báo
     $('.view-notification-btn').on('click', function() {
@@ -235,6 +235,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             $('#modal-notification-related-container').hide();
         }
+        
+        // Hiển thị modal
+        viewModal.show();
     });
     
     // Xử lý modal xóa thông báo
@@ -244,6 +247,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         $('#delete-notification-id').val(id);
         $('#delete-notification-title').text(title);
+        
+        // Hiển thị modal
+        deleteModal.show();
+    });
+    
+    // Xử lý nút đóng modal
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            var modalId = this.closest('.modal').id;
+            if (modalId === 'viewNotificationModal') {
+                viewModal.hide();
+            } else if (modalId === 'deleteNotificationModal') {
+                deleteModal.hide();
+            }
+        });
     });
 });
 </script>

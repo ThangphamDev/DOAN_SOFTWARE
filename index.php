@@ -536,7 +536,7 @@ switch ($path) {
     case '/admin/users/search':
         if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'admin') {
             $query = $_GET['q'] ?? '';
-            $stmt = $db->prepare("SELECT user_id, username, email, fullname, role FROM users WHERE (username LIKE ? OR email LIKE ? OR fullname LIKE ?) LIMIT 10");
+            $stmt = $db->prepare("SELECT user_id, username, email, full_name, role FROM users WHERE (username LIKE ? OR email LIKE ? OR full_name LIKE ?) LIMIT 10");
             $searchTerm = "%$query%";
             $stmt->bindParam(1, $searchTerm);
             $stmt->bindParam(2, $searchTerm);
